@@ -1,0 +1,23 @@
+{
+    "name": "hocvt/filer_filesystem",
+    "authors": [
+        {
+            "name": "Vu Thai Hoc",
+            "email": "vuthaihoc.ttud@gmail.com"
+        }
+    ],
+    "require": {
+        "league/flysystem": "~1.0",
+        "guzzlehttp/guzzle": "^6.0|^7.0",
+        "nesbot/carbon": "^2.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^7.0|^8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "HocVT\\Flysystem\\Filer\\": "src/",
+            "": "seaweed_filer/"
+        }
+    }
+}
