@@ -114,6 +114,13 @@ class FilerAdapter implements AdapterInterface
 
     public function createDir($dirname, Config $config)
     {
+        if($meta = $this->getMetadata($dirname)){
+            if($meta['type'] == 'dir'){
+                return $meta;
+            }else{
+                return false;
+            }
+        }
         try{
             $this->client->post(rtrim($dirname, "/") . "/");
             return $this->getMetadata($dirname);
@@ -190,21 +197,17 @@ class FilerAdapter implements AdapterInterface
     public function listContents($directory = '', $recursive = false)
     {
         try{
-            $response = $this->client->get(rtrim($directory, "/") . "/?pretty=y", [
-                'headers' => [
-                    'Accept' => 'application/json'
-                ]
-            ]);
 
-            $data = json_decode($response->getBody()->getContents(), true);
+            $result = $this->listContentsBase($directory);
 
-            $result = [];
-
-            foreach ($data['Entries'] as $file_data){
-                if(!isset($file_data['chunks'])){
-                    continue;
+            if($recursive == true){
+                $recursive_result = [];
+                foreach ($result as $item){
+                    if($item['type'] == 'dir'){
+                        $recursive_result = array_merge($recursive_result, $this->listContentsBase($item['path']));
+                    }
                 }
-                $result[] = $this->parseFileInfo($file_data);
+                $result = array_merge($result, $recursive_result);
             }
 
             return $result;
@@ -212,6 +215,25 @@ class FilerAdapter implements AdapterInterface
         }catch (RequestException $exception){
             return [];
         }
+    }
+
+    protected function listContentsBase($directory){
+        $response = $this->client->get(
+            rtrim($directory, "/") . "/?pretty=y",
+            [
+                'headers' => [
+                    'Accept' => 'application/json'
+                ]
+            ]);
+
+        $data = json_decode($response->getBody()->getContents(), true);
+
+        $result = [];
+
+        foreach ($data['Entries'] as $file_data){
+            $result[] = $this->parseFileInfo($file_data);
+        }
+        return $result;
     }
 
     public function getMetadata($path)
@@ -337,15 +359,18 @@ class FilerAdapter implements AdapterInterface
     }
 
     protected function parseFileInfo($file_info){
-        $size = array_reduce($file_info['chunks'], function($chunk, $_size){
-            return $_size + $chunk['size'];
-        }, 0);
+        if(isset($file_info['chunks'])){
+            $size = array_reduce($file_info['chunks'], function($_size, $chunk){
+                return $_size + $chunk['size'];
+            }, 0);
+        }else{
+            $size = 0;
+        }
         $info = [
-            'path' => $file_info['FullPath'],
+            'path' => ltrim($file_info['FullPath'], '/'),
             'size' => $size,
             'mimetype' => $file_info['Mime'],
-            'type' => 'file',
-            ''
+            'type' => $file_info['Mime'] ? "file" : "dir",
         ];
         return $info;
     }

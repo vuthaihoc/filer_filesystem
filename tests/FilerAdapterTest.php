@@ -24,11 +24,11 @@ class FilerAdapterTest  extends TestCase
 
     public function __destruct()
     {
-//        $this->adapter->deleteDir('baz');
-//        $this->adapter->deleteDir('dir');
-//        $this->adapter->deleteDir('foo');
-//        $this->adapter->delete('file.txt');
-//        $this->adapter->delete('new_file.txt');
+        $this->adapter->deleteDir('baz');
+        $this->adapter->deleteDir('dir');
+        $this->adapter->deleteDir('foo');
+        $this->adapter->delete('file.txt');
+        $this->adapter->delete('new_file.txt');
     }
 
     public function testRootHasTimestamp()
@@ -50,7 +50,7 @@ class FilerAdapterTest  extends TestCase
         $this->assertSame(3, count($result));
         $this->assertSame('dir/subdir', $result['path']);
         $this->assertSame('dir', $result['type']);
-        $this->arrayHasKey($result, 'timestamp');
+        $this->assertArrayHasKey('timestamp', $result);
         $this->assertTrue($this->adapter->has('dir'));
         $this->assertTrue($this->adapter->has('dir/subdir'));
 
@@ -58,7 +58,7 @@ class FilerAdapterTest  extends TestCase
         $this->assertSame(3, count($result));
         $this->assertSame('dir', $result['path']);
         $this->assertSame('dir', $result['type']);
-        $this->arrayHasKey($result, 'timestamp');
+        $this->assertArrayHasKey( 'timestamp', $result);
 
         $this->assertFalse($this->adapter->createDir('file.txt', new Config()));
         $this->assertFalse($this->adapter->createDir('file.txt/dir', new Config()));
@@ -137,35 +137,17 @@ class FilerAdapterTest  extends TestCase
     public function testListContents()
     {
         $result = $this->adapter->listContents('');
-        $this->assertSame(1, count($result));
-        $this->assertSame('file.txt', $result[0]['path']);
+        $this->assertSame(5, count($result));
+        $this->assertNotContains('/', $result[0]['path']);
 
         $this->adapter->write('dir/file.txt', 'contents', new Config());
-        $this->adapter->write('dir/subdir/file.txt', 'contents', new Config());
+        $this->assertTrue($this->adapter->has('dir/file.txt'));
 
-        $result = $this->adapter->listContents('', true);
-        $this->assertSame(5, count($result));
-        $this->assertSame('file.txt', $result[0]['path']);
-        $this->assertSame('dir', $result[1]['path']);
-        $this->assertSame('dir/file.txt', $result[2]['path']);
-        $this->assertSame('dir/subdir', $result[3]['path']);
-        $this->assertSame('dir/subdir/file.txt', $result[4]['path']);
-
-        $result = $this->adapter->listContents('');
-        $this->assertSame(2, count($result));
-        $this->assertSame('file.txt', $result[0]['path']);
-        $this->assertSame('dir', $result[1]['path']);
+        $result = $this->adapter->listContents('', true);var_dump($result);
+        $this->assertSame(3, count($result));
 
         $result = $this->adapter->listContents('dir', true);
-        $this->assertSame(3, count($result));
-        $this->assertSame('dir/file.txt', $result[0]['path']);
-        $this->assertSame('dir/subdir', $result[1]['path']);
-        $this->assertSame('dir/subdir/file.txt', $result[2]['path']);
-
-        $result = $this->adapter->listContents('dir');
-        $this->assertSame(2, count($result));
-        $this->assertSame('dir/file.txt', $result[0]['path']);
-        $this->assertSame('dir/subdir', $result[1]['path']);
+        $this->assertSame(1, count($result));
 
         $this->assertSame([], $this->adapter->listContents('no_dir'));
     }

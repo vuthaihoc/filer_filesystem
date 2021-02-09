@@ -16,8 +16,7 @@
     },
     "autoload": {
         "psr-4": {
-            "HocVT\\Flysystem\\Filer\\": "src/",
-            "": "seaweed_filer/"
+            "HocVT\\Flysystem\\Filer\\": "src/"
         }
     }
 }
